@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudio Mizrahi - Agente IA</title>
+    <style>
+        body { background: #0a0a0a; color: #d4af37; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; }
+        .status { font-size: 1.2rem; margin-bottom: 20px; color: #888; }
+        #mic-btn { background: none; border: 2px solid #d4af37; border-radius: 50%; width: 100px; height: 100px; cursor: pointer; transition: 0.3s; }
+        #mic-btn.active { box-shadow: 0 0 20px #d4af37; background: #d4af3722; }
+        .log { background: #1a1a1a; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left; font-size: 0.9rem; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h2>Estudio Mizrahi</h2>
+    <div class="status" id="status">En línea - Esperando orden</div>
+    
+    <button id="mic-btn" onclick="toggleListen()">
+        <svg viewBox="0 0 24 24" width="50" fill="#d4af37"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+    </button>
+
+    <div class="log" id="output"></div>
+
+    <script>
+        const output = document.getElementById('output');
+        const status = document.getElementById('status');
+        const btn = document.getElementById('mic-btn');
+
+        // Configuración de Voz (Texto a Habla)
+        function hablar(texto) {
+            const utterance = new SpeechSynthesisUtterance(texto);
+            utterance.lang = 'es-AR';
+            utterance.rate = 1.0; 
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Reconocimiento de Voz (Escucha)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'es-AR';
+
+        recognition.onstart = () => {
+            status.innerText = "Escuchando...";
+            btn.classList.add('active');
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript.toLowerCase();
+            output.innerHTML += `<p><strong>Vos:</strong> ${transcript}</p>`;
+            procesarComando(transcript);
+        };
+
+        recognition.onend = () => {
+            status.innerText = "En línea";
+            btn.classList.remove('active');
+        };
+
+        function toggleListen() {
+            recognition.start();
+        }
+
+        // --- EL CEREBRO ORQUESTADOR (Lógica inicial) ---
+        function procesarComando(comando) {
+            if (comando.includes("precio") || comando.includes("monto")) {
+                hablar("El precio está actualizado en el index, Daniel. No te preocupes, ya verifiqué que el juzgado no pueda decir nada.");
+            } 
+            else if (comando.includes("plazo") || comando.includes("expediente")) {
+                hablar("Estoy revisando el portal. Parece que los del juzgado 5 todavía no se dignaron a despachar. Típico.");
+            }
+            else {
+                hablar("Te escuché, pero todavía estoy aprendiendo ese truco. ¿Querés que busque jurisprudencia sobre eso?");
+            }
+        }
+    </script>
+</body>
+</html>
