@@ -1,0 +1,621 @@
+/* Reset y Variables */
+:root {
+    --primary-blue: #0f1c3f;
+    --secondary-blue: #1a2b57;
+    --accent-gold: #e3b645;
+    --dark-gold: #d4a73a;
+    --whatsapp-green: #25d366;
+    --text-light: #ffffff;
+    --text-muted: #9ca3af;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+    /* Suavizar scroll en iOS */
+}
+
+body {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: var(--primary-blue);
+    color: var(--text-light);
+    line-height: 1.6;
+}
+
+/* Header */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    /* Mayor transparencia (0.5) */
+    background: rgba(15, 28, 63, 0.85);
+    /* Increased opacity slightly for readability since it is fixed */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0.5rem 0;
+    backdrop-filter: blur(10px);
+    /* Added blur for better aesthetics */
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+/* Logo - Tamaño optimizado para la barra */
+.logo-img {
+    height: 120px;
+    /* Aumentado al máximo sin romper */
+    width: auto;
+    object-fit: contain;
+    transform: none;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    margin-right: 15px;
+}
+
+/* Título: Estilo clásico, Title Case, Metálico Cromado */
+.studio-info h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.3rem;
+    /* Un poco más pequeña */
+    font-weight: 700;
+    text-transform: none;
+    /* Respetar may./min.: "Estudio Mizrahi" */
+    letter-spacing: 0.5px;
+    margin-bottom: 0px;
+    max-width: 100%;
+
+    /* Gradiente metálico de alto contraste (Cromado) */
+    background: linear-gradient(to bottom,
+            #ffffff 0%,
+            #d0d0d0 30%,
+            #a0a0a0 50%,
+            #d0d0d0 70%,
+            #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+
+    /* Sombra dura para efecto relieve */
+    filter: drop-shadow(1px 1px 0px rgba(0, 0, 0, 0.6));
+}
+
+.studio-info .gold-text {
+    /* Hacemos que herede el estilo del padre para que sea uniforme */
+    background: inherit;
+    -webkit-text-fill-color: inherit;
+    -webkit-background-clip: inherit;
+    color: inherit;
+}
+
+.contact-phone {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--whatsapp-green);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.contact-phone i {
+    font-size: 1.2rem;
+}
+
+.admin-link {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+}
+
+.admin-link:hover {
+    background: var(--accent-gold);
+    color: var(--primary-blue);
+    transform: rotate(90deg) scale(1.1);
+}
+
+.header-cta {
+    background: var(--accent-gold);
+    color: var(--primary-blue);
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 700;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.header-cta:hover {
+    background: var(--dark-gold);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(227, 182, 69, 0.4);
+}
+
+/* Hero Section */
+.hero {
+    position: relative;
+    padding: 12rem 1.5rem 5rem;
+    /* Increased top padding to account for fixed header */
+    background: linear-gradient(rgba(15, 28, 63, 0.8), rgba(15, 28, 63, 0.9)),
+        url('https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=2000') center/cover;
+    text-align: center;
+}
+
+.hero-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.badge {
+    background: var(--accent-gold);
+    color: var(--primary-blue);
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    display: inline-block;
+    margin-bottom: 2rem;
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, #ffffff, #f0f0f0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.main-title {
+    font-size: 3.5rem;
+    color: var(--accent-gold);
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    margin-bottom: 2.5rem;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cta-button {
+    background: var(--accent-gold);
+    color: var(--primary-blue);
+    padding: 1rem 2.5rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    box-shadow: 0 8px 25px rgba(227, 182, 69, 0.3);
+}
+
+.cta-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 35px rgba(227, 182, 69, 0.5);
+}
+
+/* Sección Destacada - Cobertura Geriátricos */
+.featured-section {
+    background: var(--secondary-blue);
+    padding: 4rem 1.5rem;
+}
+
+.geriatric-coverage {
+    max-width: 800px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, rgba(227, 182, 69, 0.1), rgba(227, 182, 69, 0.05));
+    border: 2px solid var(--accent-gold);
+    border-radius: 20px;
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(227, 182, 69, 0.2);
+}
+
+.geriatric-coverage::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(227, 182, 69, 0.1) 0%, transparent 70%);
+    animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+.coverage-content {
+    position: relative;
+    z-index: 1;
+}
+
+.coverage-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent-gold);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.coverage-description {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #e0e0e0;
+    font-size: 1.05rem;
+}
+
+.coverage-amount-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(227, 182, 69, 0.3);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.amount-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.amount-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent-gold);
+    font-family: 'Courier New', monospace;
+    letter-spacing: -1px;
+    /* Números más juntos */
+}
+
+.update-link {
+    color: var(--accent-gold);
+    text-decoration: none;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.update-link:hover {
+    color: var(--dark-gold);
+    gap: 0.5rem;
+}
+
+.amount-label-link {
+    text-decoration: none;
+    color: inherit;
+    display: inline-block;
+    transition: opacity 0.3s ease;
+}
+
+.amount-label-link:hover {
+    opacity: 0.7;
+}
+
+/* Sección de Servicios */
+.services-section {
+    padding: 5rem 1.5rem;
+    background: var(--primary-blue);
+}
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 3rem;
+    text-decoration: underline;
+    text-decoration-color: var(--accent-gold);
+    text-underline-offset: 8px;
+    word-wrap: break-word;
+    /* Asegurar que no se corte */
+    overflow-wrap: break-word;
+    max-width: 100%;
+    padding: 0 10px;
+    /* Espacio para que no toque bordes */
+}
+
+.services-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.service-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.service-card:hover {
+    border-color: var(--accent-gold);
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(227, 182, 69, 0.2);
+}
+
+.service-icon {
+    font-size: 3rem;
+    color: var(--accent-gold);
+    margin-bottom: 1.5rem;
+    transition: transform 0.3s ease;
+}
+
+.service-card:hover .service-icon {
+    transform: scale(1.1);
+}
+
+.service-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.service-description {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Footer */
+.footer {
+    background: #080f22;
+    border-top: 4px solid var(--accent-gold);
+    padding: 3rem 1.5rem 2rem;
+    text-align: center;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer p {
+    margin-bottom: 1rem;
+}
+
+.footer-email {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Botón WhatsApp Flotante */
+.whatsapp-float {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 999;
+    background: var(--whatsapp-green);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    animation: pulse-whatsapp 2s infinite;
+}
+
+@keyframes pulse-whatsapp {
+    0% {
+        box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 15px rgba(37, 211, 102, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+    }
+}
+
+.whatsapp-float i {
+    font-size: 2rem;
+    color: white;
+}
+
+.whatsapp-float:hover {
+    transform: scale(1.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header-content {
+        /* Side-by-side layout for mobile */
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0 1rem;
+    }
+
+    .logo-section {
+        /* Keep logo and text in a row */
+        flex-direction: row;
+        text-align: left;
+        gap: 0.5rem;
+        align-items: center;
+        /* Allow shrinking if needed, but prefer keeping it visible */
+        flex: 1;
+        min-width: 0;
+        /* Allow flex item to shrink below content size if strictly necessary */
+    }
+
+    .logo-img {
+        /* Logo adjusted for mobile row */
+        height: 60px;
+        /* Reduced to fit */
+        margin-right: 5px;
+        width: auto;
+    }
+
+    .studio-info h1 {
+        font-size: 0.9rem;
+        /* Un poco más pequeño en móviles extremos */
+        letter-spacing: 0px;
+        line-height: 1.1;
+        white-space: normal;
+        /* Permitir que baje si es necesario */
+        max-width: 150px;
+        /* Limitar ancho para no chocar con el tel */
+    }
+
+    .contact-phone {
+        font-size: 0.8rem;
+        /* Un poco más pequeño para que entre */
+        justify-content: flex-end;
+        white-space: nowrap;
+        flex-shrink: 0;
+        margin-left: auto;
+        /* Empujar a la derecha */
+    }
+
+    .header-cta {
+        /* If we had it back, we'd style it here, but it's removed currently. 
+           Just keeping the rule in case it returns or for cleanup */
+        display: none;
+    }
+
+    .hero {
+        padding: calc(8.5rem + env(safe-area-inset-top)) 1rem 3rem;
+        min-height: 100dvh;
+        /* Altura dinámica para Instagram */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .main-title {
+        font-size: 2rem;
+    }
+
+    .hero-title {
+        font-size: 1.75rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+
+    .cta-button {
+        padding: 0.85rem 1.75rem;
+        font-size: 0.95rem;
+    }
+
+    .geriatric-coverage {
+        padding: 1.5rem;
+    }
+
+    .coverage-title {
+        font-size: 1.5rem;
+    }
+
+    .amount-value {
+        font-size: clamp(1.2rem, 5vw, 1.6rem);
+        /* Tamaño fluido para que no desborde */
+        white-space: nowrap;
+        display: inline-block;
+    }
+
+    .section-title {
+        font-size: clamp(1.4rem, 7vw, 1.8rem);
+        /* Se encoge en pantallas muy pequeñas */
+        margin-bottom: 2rem;
+        word-wrap: normal;
+        overflow-wrap: normal;
+        padding: 0 5px;
+    }
+
+    .services-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .whatsapp-float {
+        position: fixed !important;
+        /* Forzar fixed */
+        width: 50px;
+        height: 50px;
+        bottom: calc(1.5rem + env(safe-area-inset-bottom));
+        right: 1.5rem;
+        z-index: 9999;
+        /* Mayor jerarquía */
+    }
+
+    .whatsapp-float i {
+        font-size: 1.5rem;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
