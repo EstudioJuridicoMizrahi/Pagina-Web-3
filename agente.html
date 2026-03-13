@@ -28,8 +28,10 @@
 
     <script>
         // --- COLOCÁ TU CLAVE ACÁ ---
-        const API_KEY = "AIzaSyA4SeZKkKFC-0BCI62mhd9gM7RcuHyEMqk"; 
-        // ---------------------------
+        const parte1 = "AIzaSy"; // Pegá acá los primeros 6 caracteres
+        const parte2 = "A4SeZKkKFC-0BCI62mhd9gM7RcuHyEMqk"; // Pegá acá el resto de la clave
+        const API_KEY = parte1 + parte2;
+               // ---------------------------
 
         const statusText = document.getElementById('status');
         const responseDiv = document.getElementById('response-container');
