@@ -2,90 +2,122 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" const API_KEY ="AIzaSyA4SeZKkKFC-0BCI62mhd9gM7RcuHyEMqk">
-    <title>Socio Digital - Mizrahi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socio Digital - Estudio Mizrahi</title>
     <style>
-        body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; }
-        #mic-btn { background: #238636; border: none; border-radius: 50%; width: 80px; height: 80px; cursor: pointer; margin: 20px; box-shadow: 0 0 15px rgba(35,134,54,0.5); }
-        #mic-btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; }
-        .status { color: #8b949e; margin-top: 10px; }
-        #response { margin-top: 30px; padding: 20px; background: #161b22; border-radius: 10px; border: 1px solid #30363d; text-align: left; line-height: 1.6; }
+        body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); max-width: 500px; width: 90%; }
+        h1 { color: #58a6ff; margin-bottom: 10px; font-size: 1.5rem; }
+        #mic-btn { background: #238636; border: none; border-radius: 50%; width: 90px; height: 90px; cursor: pointer; margin: 20px; transition: all 0.3s; display: flex; align-items: center; justify-content: center; outline: none; }
+        #mic-btn:hover { transform: scale(1.05); background: #2ea043; }
+        #mic-btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .status { color: #8b949e; font-size: 0.9rem; margin-bottom: 20px; }
+        #response-container { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 50px; font-size: 1rem; line-height: 1.5; }
+        .hint { font-size: 0.7rem; color: #484f58; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <h1>Socio Digital Mizrahi</h1>
-    <p class="status" id="status">Presioná para hablar con tu socio</p>
-    
-    <button id="mic-btn" onclick="toggleListen()">
-        <svg viewBox="0 0 24 24" width="40" fill="white"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-    </button>
 
-    <div id="response">Esperando consulta...</div>
+    <div class="card">
+        <h1>Socio Digital Mizrahi</h1>
+        <div class="status" id="status">Presioná para iniciar el diálogo</div>
+        
+        <button id="mic-btn" onclick="toggleListen()">
+            <svg viewBox="0 0 24 24" width="45" fill="white"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+        </button>
+
+        <div id="response-container">
+            <span style="color: #484f58;">Esperando consulta jurídica...</span>
+        </div>
+        
+        <p class="hint">Funciona mejor en Chrome. Asegurá de dar permisos de micrófono.</p>
+    </div>
 
     <script>
-        const API_KEY = "AIzaSyA4SeZKkKFC-0BCI62mhd9gM7RcuHyEMqk"; // <--- PEGÁ TU CLAVE ACÁ
-        const statusText = document.getElementById('status');
-        const responseDiv = document.getElementById('response');
+        // --- CONFIGURACIÓN ---
+        const API_KEY = "AIzaSyA4SeZKkKFC-0BCI62mhd9gM7RcuHyEMqk"; // <--- PEGÁ TU CLAVE ENTRE LAS COMILLAS
+        // ---------------------
 
+        const statusText = document.getElementById('status');
+        const responseDiv = document.getElementById('response-container');
+        const btn = document.getElementById('mic-btn');
+
+        // Función de Voz (Salida)
         function hablar(texto) {
-            const synth = window.speechSynthesis;
+            window.speechSynthesis.cancel(); // Detiene cualquier voz previa
             const utter = new SpeechSynthesisUtterance(texto);
             utter.lang = 'es-AR';
-            synth.speak(utter);
+            utter.rate = 1.1; 
+            window.speechSynthesis.speak(utter);
         }
 
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        // Reconocimiento de Voz (Entrada)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert("Tu navegador no soporta reconocimiento de voz. Usá Chrome.");
+        }
+        
+        const recognition = new SpeechRecognition();
         recognition.lang = 'es-AR';
+        recognition.continuous = false;
+        recognition.interimResults = false;
 
-        recognition.onstart = () => { statusText.innerText = "Escuchando..."; document.getElementById('mic-btn').classList.add('active'); };
-        recognition.onend = () => { statusText.innerText = "Procesando..."; document.getElementById('mic-btn').classList.remove('active'); };
+        recognition.onstart = () => {
+            statusText.innerText = "Te escucho, Daniel...";
+            btn.classList.add('active');
+        };
 
-        recognition.onresult = recognition.onresult = async (event) => {
-            const prompt = event.results[0][0].transcript;
-            responseDiv.innerHTML = `<strong>Vos:</strong> ${prompt}<br><br><em>Consultando al estudio...</em>`;
+        recognition.onend = () => {
+            btn.classList.remove('active');
+            statusText.innerText = "Procesando con la IA...";
+        };
+
+        recognition.onerror = (event) => {
+            statusText.innerText = "Error: " + event.error;
+            btn.classList.remove('active');
+        };
+
+        recognition.onresult = async (event) => {
+            const userText = event.results[0][0].transcript;
+            responseDiv.innerHTML = `<strong style="color:#58a6ff;">Vos:</strong> ${userText}<br><br><em style="color:#8b949e;">Pensando...</em>`;
             
             try {
-                // Cambiamos a la versión v1beta para mayor compatibilidad gratuita
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{
-                            parts: [{ text: "Sos el socio jurídico senior de Daniel Mizrahi. Respondé de forma breve, profesional, sarcástica y amistosa. Contexto: Argentina. Consulta: " + prompt }]
+                            parts: [{ text: "Sos el socio digital de Daniel Mizrahi, un abogado de Argentina. Respondé de forma breve (máximo 3 frases), con un tono profesional pero marcadamente sarcástico, amistoso y ácido. No uses listas, hablá de forma fluida. Consulta: " + userText }]
                         }]
                     })
                 });
                 
                 const data = await response.json();
                 
-                // Si Google nos rebota, el error aparecerá acá
                 if (data.error) {
                     throw new Error(data.error.message);
                 }
 
-                const aiText = data.candidates[0].content.parts[0].text;
-                responseDiv.innerHTML = `<strong>Socio Digital:</strong> ${aiText}`;
-                hablar(aiText);
+                const aiResponse = data.candidates[0].content.parts[0].text;
+                responseDiv.innerHTML = `<strong style="color:#58a6ff;">Socio Digital:</strong> ${aiResponse}`;
                 statusText.innerText = "Listo";
+                hablar(aiResponse);
+
             } catch (err) {
                 console.error(err);
-                responseDiv.innerText = "Error de conexión: " + err.message;
-                hablar("Daniel, sigo sin poder conectar. Fijate si la clave de API no tiene espacios de más o si está activa en Google AI Studio.");
-            }
-        };
-                
-                const data = await response.json();
-                const aiText = data.candidates[0].content.parts[0].text;
-                responseDiv.innerHTML = `<strong>Socio Digital:</strong> ${aiText}`;
-                hablar(aiText);
-                statusText.innerText = "Listo";
-            } catch (err) {
-                responseDiv.innerText = "Error: ¿Pegaste bien la API Key?";
-                hablar("Daniel, creo que te olvidaste de configurar mi cerebro. Revisá la clave de API.");
+                responseDiv.innerHTML = `<span style="color:#da3633;">Error: ${err.message}</span>`;
+                hablar("Hay un error en la conexión, Daniel. Revisá que la clave de API sea correcta.");
             }
         };
 
-        function toggleListen() { recognition.start(); }
+        function toggleListen() {
+            try {
+                recognition.start();
+            } catch (e) {
+                console.log("Ya está escuchando");
+            }
+        }
     </script>
 </body>
 </html>
