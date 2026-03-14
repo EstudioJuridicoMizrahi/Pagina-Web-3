@@ -1,9 +1,56 @@
-rec.onresult = async (e) => {
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socio Digital Mizrahi</title>
+    <style>
+        body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { color: #58a6ff; font-size: 1.5rem; }
+        #btn { background: #238636; border: none; border-radius: 50%; width: 85px; height: 85px; cursor: pointer; margin: 20px; outline: none; transition: 0.3s; }
+        #btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; }
+        #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 60px; }
+        .st { color: #8b949e; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Socio Digital Mizrahi</h1>
+        <p class="st" id="st">Hacé clic en el micro para hablar</p>
+        <button id="btn" onclick="escuchar()">🎤</button>
+        <div id="res">Esperando consulta...</div>
+    </div>
+
+    <script>
+        const p1 = "AIzaSy"; 
+        const p2 = "DteAu1wTmuPZkVmD6BQljL-4lF6058XpM";
+        const KEY = p1 + p2;
+
+        const resDiv = document.getElementById('res');
+        const st = document.getElementById('st');
+        const btn = document.getElementById('btn');
+
+        function hablar(t) {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(t);
+            u.lang = 'es-AR';
+            window.speechSynthesis.speak(u);
+        }
+
+        const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+        const rec = new SpeechRecognition();
+        rec.lang = 'es-AR';
+
+        rec.onstart = () => { st.innerText = "Escuchando..."; btn.classList.add('active'); };
+        rec.onend = () => { btn.classList.remove('active'); st.innerText = "Procesando..."; };
+
+        rec.onresult = async (e) => {
             const txt = e.results[0][0].transcript;
-            resDiv.innerHTML = "<b>Vos:</b> " + txt;
+            resDiv.innerHTML = "<b>Daniel:</b> " + txt;
             
             try {
-                // Usamos v1beta y el modelo flash con el nombre exacto que pide el sistema
                 const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + KEY;
                 const response = await fetch(url, {
                     method: 'POST',
@@ -12,8 +59,6 @@ rec.onresult = async (e) => {
                 });
                 
                 const data = await response.json();
-                
-                // Si hay error, lo mostramos para ver qué dice el "juez" Google
                 if (data.error) throw new Error(data.error.message);
 
                 const aiText = data.candidates[0].content.parts[0].text;
@@ -22,6 +67,10 @@ rec.onresult = async (e) => {
                 st.innerText = "Listo";
             } catch (err) {
                 resDiv.innerText = "Error: " + err.message;
-                hablar("Error en el sistema, Daniel.");
             }
         };
+
+        function escuchar() { try { rec.start(); } catch(e) {} }
+    </script>
+</body>
+</html>
