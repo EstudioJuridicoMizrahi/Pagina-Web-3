@@ -20,33 +20,28 @@
     </div>
 
     <script>
-        const KEY = "AIzaSyC_3NUW1wDijFIxrtB7d1_1NsMTsJNhDpU"; // Poné la del proyecto "Gemini Project"
+        // USA TU CLAVE DEL "GEMINI PROJECT"
+        const KEY = "AIzaSyC_3NUW1wDijFIxrtB7d1_1NsMTsJNhDpU"; 
 
-        const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+        const rec = new (window.webkitSpeechRecognition || window.Recognition)();
         rec.lang = 'es-AR';
 
-        rec.onstart = () => { 
-            document.getElementById('st').innerText = "Escuchando..."; 
-            document.getElementById('btn').classList.add('active'); 
-        };
-        
-        rec.onend = () => { 
-            document.getElementById('btn').classList.remove('active'); 
-            document.getElementById('st').innerText = "Procesando...";
-        };
+        rec.onstart = () => { document.getElementById('st').innerText = "Escuchando..."; document.getElementById('btn').classList.add('active'); };
+        rec.onend = () => { document.getElementById('btn').classList.remove('active'); };
 
         rec.onresult = async (e) => {
             const txt = e.results[0][0].transcript;
             document.getElementById('res').innerHTML = "<b>Vos:</b> " + txt;
+            document.getElementById('st').innerText = "Consultando...";
             
             try {
-                // Forzamos v1beta y gemini-pro (el más compatible)
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${KEY}`;
+                // Forzamos gemini-1.0-pro que es el más "antiguo" y estable para cuentas nuevas
+                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.0-pro:generateContent?key=${KEY}`;
                 
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Sos el socio sarcástico de Daniel Mizrahi. Sé breve. Respondé a: " + txt }] }] })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Respondé como un abogado sarcástico y breve: " + txt }] }] })
                 });
                 
                 const data = await response.json();
@@ -59,10 +54,8 @@
                 u.lang = 'es-AR';
                 window.speechSynthesis.speak(u);
                 document.getElementById('st').innerText = "Listo";
-
             } catch (err) {
-                document.getElementById('res').innerHTML = "<b>Error:</b> " + err.message;
-                document.getElementById('st').innerText = "Fallo técnico";
+                document.getElementById('res').innerHTML = "<b>Todavía no habilitaron tu clave:</b> " + err.message;
             }
         };
 
