@@ -18,9 +18,9 @@
 
     <div class="card">
         <h1>Socio Digital Mizrahi</h1>
-        <p class="st" id="st">Hacé clic en el micro para hablar</p>
+        <p class="st" id="st">Hacé clic para hablar</p>
         <button id="btn" onclick="escuchar()">🎤</button>
-        <div id="res">Esperando consulta...</div>
+        <div id="res">Esperando...</div>
     </div>
 
     <script>
@@ -39,8 +39,7 @@
             window.speechSynthesis.speak(u);
         }
 
-        const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
-        const rec = new SpeechRecognition();
+        const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         rec.lang = 'es-AR';
 
         rec.onstart = () => { st.innerText = "Escuchando..."; btn.classList.add('active'); };
@@ -51,24 +50,48 @@
             resDiv.innerHTML = "<b>Daniel:</b> " + txt;
             
             try {
-                const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + KEY;
+                // CAMBIO CLAVE: Usamos la URL estable y el modelo flash genérico
+                const url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + KEY;
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({contents: [{parts: [{text: "Sos el socio del abogado Daniel Mizrahi. Sé muy breve y sarcástico. Respondé a: " + txt}]}]})
+                    body: JSON.stringify({contents: [{parts: [{text: "Sos el socio del abogado Daniel Mizrahi. Respondé de forma breve y sarcástica a: " + txt}]}]})
                 });
                 
                 const data = await response.json();
-                if (data.error) throw new Error(data.error.message);
+                
+                if (data.error) {
+                    // Si este modelo falla, intentamos con el 'pro' automáticamente
+                    throw new Error(data.error.message);
+                }
 
                 const aiText = data.candidates[0].content.parts[0].text;
                 resDiv.innerHTML = "<b>Socio:</b> " + aiText;
                 hablar(aiText);
                 st.innerText = "Listo";
             } catch (err) {
-                resDiv.innerText = "Error: " + err.message;
+                resDiv.innerText = "Error: " + err.message + ". Probando otro modelo...";
+                // Re-intento automático con Gemini Pro si falla el Flash
+                probarPro(txt);
             }
         };
+
+        async function probarPro(txt) {
+            const url = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=" + KEY;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({contents: [{parts: [{text: "Sos el socio de Daniel Mizrahi. Sarcástico y breve: " + txt}]}]})
+            });
+            const data = await response.json();
+            if (data.candidates) {
+                const aiText = data.candidates[0].content.parts[0].text;
+                resDiv.innerHTML = "<b>Socio:</b> " + aiText;
+                hablar(aiText);
+            } else {
+                resDiv.innerText = "Error definitivo en Google.";
+            }
+        }
 
         function escuchar() { try { rec.start(); } catch(e) {} }
     </script>
