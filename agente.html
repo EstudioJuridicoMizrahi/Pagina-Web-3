@@ -14,34 +14,30 @@
 <body>
     <div class="card">
         <h1>Socio Digital Mizrahi</h1>
-        <p id="st">Presioná y hablá</p>
+        <p id="st">Presioná el mic y hablá</p>
         <button id="btn" onclick="escuchar()">🎤</button>
-        <div id="res">Esperando...</div>
+        <div id="res">Esperando tu consulta...</div>
     </div>
 
     <script>
-        // USA TU CLAVE DEL "GEMINI PROJECT"
-        const KEY = "AIzaSyC_3NUW1wDijFIxrtB7d1_1NsMTsJNhDpU"; 
+        const KEY = "AIzaSyD28DrHH8COCGjNzmv0dPNwqYBaandYArY"; 
 
-        const rec = new (window.webkitSpeechRecognition || window.Recognition)();
+        const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         rec.lang = 'es-AR';
 
-        rec.onstart = () => { document.getElementById('st').innerText = "Escuchando..."; document.getElementById('btn').classList.add('active'); };
-        rec.onend = () => { document.getElementById('btn').classList.remove('active'); };
+        rec.onstart = () => { document.getElementById('btn').classList.add('active'); document.getElementById('st').innerText = "Te escucho..."; };
+        rec.onend = () => { document.getElementById('btn').classList.remove('active'); document.getElementById('st').innerText = "Procesando..."; };
 
         rec.onresult = async (e) => {
             const txt = e.results[0][0].transcript;
             document.getElementById('res').innerHTML = "<b>Vos:</b> " + txt;
-            document.getElementById('st').innerText = "Consultando...";
             
             try {
-                // Forzamos gemini-1.0-pro que es el más "antiguo" y estable para cuentas nuevas
-                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.0-pro:generateContent?key=${KEY}`;
-                
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Respondé como un abogado sarcástico y breve: " + txt }] }] })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Respondé como un abogado socio de Daniel Mizrahi, muy sarcástico y breve: " + txt }] }] })
                 });
                 
                 const data = await response.json();
@@ -55,7 +51,7 @@
                 window.speechSynthesis.speak(u);
                 document.getElementById('st').innerText = "Listo";
             } catch (err) {
-                document.getElementById('res').innerHTML = "<b>Todavía no habilitaron tu clave:</b> " + err.message;
+                document.getElementById('res').innerHTML = "<b>Aviso:</b> Google está terminando de activar el permiso. Esperá 1 min. <br><small>" + err.message + "</small>";
             }
         };
 
