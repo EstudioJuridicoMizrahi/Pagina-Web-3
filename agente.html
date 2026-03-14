@@ -1,45 +1,69 @@
-<script>
-    // No dejamos la clave escrita. La pedimos al abrir la página.
-    const KEY = prompt("Por seguridad, ingresá tu Clave de API:"); 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Socio Digital Mizrahi</title>
+    <style>
+        body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding-top: 50px; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; display: inline-block; }
+        #btn { background: #238636; border: none; color: white; padding: 15px 32px; font-size: 16px; border-radius: 8px; cursor: pointer; }
+        #res { margin-top: 20px; color: #58a6ff; }
+    </style>
+</head>
+<body>
 
-    const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
-    rec.lang = 'es-AR';
+    <div class="card">
+        <h1>Socio Digital Mizrahi</h1>
+        <button id="btn" onclick="escuchar()">🎤 EMPEZAR A HABLAR</button>
+        <div id="res">Esperando...</div>
+    </div>
 
-    rec.onstart = () => { document.getElementById('st').innerText = "Escuchando..."; document.getElementById('btn').classList.add('active'); };
-    rec.onend = () => { document.getElementById('btn').classList.remove('active'); };
+    <script>
+        // La clave se pide por pantalla para que Google no la bloquee en GitHub
+        let KEY = "";
 
-    rec.onresult = async (e) => {
-        const txt = e.results[0][0].transcript;
-        document.getElementById('res').innerHTML = "<b>Daniel:</b> " + txt;
-        
-        try {
-            // Usamos la ruta estable que habilitamos en Cloud
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: "Sos el socio abogado sarcástico de Daniel Mizrahi. Sé breve. Respondé a: " + txt }] }]
-                })
-            });
-            
-            const data = await response.json();
-            if (data.error) throw new Error(data.error.message);
+        async function escuchar() {
+            if (!KEY) {
+                KEY = prompt("Pegá tu nueva clave de API aquí:");
+                if (!KEY) return;
+            }
 
-            const aiText = data.candidates[0].content.parts[0].text;
-            document.getElementById('res').innerHTML = "<b>Socio:</b> " + aiText;
-            
-            const u = new SpeechSynthesisUtterance(aiText);
-            u.lang = 'es-AR';
-            window.speechSynthesis.speak(u);
-            document.getElementById('st').innerText = "Listo";
+            const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+            rec.lang = 'es-AR';
 
-        } catch (err) {
-            document.getElementById('res').innerHTML = "<b>Error:</b> " + err.message;
-            console.error(err);
+            rec.onstart = () => { document.getElementById('res').innerText = "Escuchando..."; };
+
+            rec.onresult = async (e) => {
+                const txt = e.results[0][0].transcript;
+                document.getElementById('res').innerText = "Daniel dijo: " + txt;
+                
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: "Respondé como un socio abogado sarcástico y breve: " + txt }] }]
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    const aiText = data.candidates[0].content.parts[0].text;
+                    
+                    document.getElementById('res').innerText = "Socio: " + aiText;
+                    
+                    const u = new SpeechSynthesisUtterance(aiText);
+                    u.lang = 'es-AR';
+                    window.speechSynthesis.speak(u);
+
+                } catch (err) {
+                    document.getElementById('res').innerText = "Error: " + err.message;
+                }
+            };
+
+            rec.start();
         }
-    };
-
-    function escuchar() { if(!KEY) return alert("Falta la clave"); rec.start(); }
-</script>
+    </script>
+</body>
+</html>
