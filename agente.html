@@ -8,19 +8,19 @@
         .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; max-width: 400px; width: 90%; }
         #btn { background: #238636; border: none; border-radius: 50%; width: 80px; height: 80px; cursor: pointer; font-size: 35px; margin: 20px; outline: none; }
         #btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; }
-        #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 60px; }
+        #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 60px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>Socio Digital Mizrahi</h1>
-        <p id="st">Presioná para hablar</p>
+        <p id="st">Hacé clic y hablá</p>
         <button id="btn" onclick="escuchar()">🎤</button>
         <div id="res">Esperando...</div>
     </div>
 
     <script>
-        // PEGA ACÁ TU CLAVE NUEVA DEL PROYECTO "GEMINI PROJECT"
+        // PEGA TU CLAVE ACÁ
         const KEY = "AIzaSyC_3NUW1wDijFIxrtB7d1_1NsMTsJNhDpU"; 
 
         const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
@@ -29,21 +29,31 @@
         rec.onstart = () => { document.getElementById('st').innerText = "Escuchando..."; document.getElementById('btn').classList.add('active'); };
         rec.onend = () => { document.getElementById('btn').classList.remove('active'); };
 
+        async function pedirIA(mensaje, modelo = "gemini-1.5-flash") {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${KEY}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: "Respondé como un abogado sarcástico y breve: " + mensaje }] }] })
+            });
+            return response;
+        }
+
         rec.onresult = async (e) => {
             const txt = e.results[0][0].transcript;
             document.getElementById('res').innerHTML = "<b>Daniel:</b> " + txt;
+            document.getElementById('st').innerText = "Consultando...";
             
             try {
-                // CAMBIO CLAVE: Usamos v1beta para máxima compatibilidad inicial
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
+                let res = await pedirIA(txt, "gemini-1.5-flash");
                 
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Respondé como un socio abogado sarcástico y breve: " + txt }] }] })
-                });
-                
-                const data = await response.json();
+                // Si el modelo flash falla, intentamos con el pro automáticamente
+                if (!res.ok) {
+                    console.log("Flash falló, intentando con Pro...");
+                    res = await pedirIA(txt, "gemini-pro");
+                }
+
+                const data = await res.json();
                 if (data.error) throw new Error(data.error.message);
 
                 const aiText = data.candidates[0].content.parts[0].text;
@@ -53,8 +63,9 @@
                 u.lang = 'es-AR';
                 window.speechSynthesis.speak(u);
                 document.getElementById('st').innerText = "Listo";
+
             } catch (err) {
-                document.getElementById('res').innerHTML = "<b>Aviso:</b> El modelo se está despertando. Esperá 1 minuto y probá de nuevo. <br><small>" + err.message + "</small>";
+                document.getElementById('res').innerHTML = "<b>Estado:</b> Google está activando tu cuenta. <br>Esperá 5 minutos y refrescá con Ctrl+F5.";
             }
         };
 
