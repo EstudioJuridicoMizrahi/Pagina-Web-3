@@ -1,53 +1,66 @@
-<script>
-    let API_KEY = "";
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Socio Digital Mizrahi</title>
+    <style>
+        body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding-top: 50px; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 40px; display: inline-block; max-width: 450px; }
+        #btn { background: #238636; border: none; color: white; padding: 15px 32px; font-size: 18px; border-radius: 50px; cursor: pointer; }
+        #res { margin-top: 20px; text-align: left; padding: 15px; background: #0d1117; border-radius: 10px; border-left: 5px solid #58a6ff; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Socio Digital Mizrahi</h1>
+        <button id="btn" onclick="iniciar()">🎤 EMPEZAR A HABLAR</button>
+        <div id="res">Esperando...</div>
+    </div>
 
-    async function iniciar() {
-        if (!API_KEY) {
-            API_KEY = prompt("Ingresá tu Clave de API (...2ARk):");
-            if (!API_KEY) return;
-        }
+    <script>
+        let KEY = "";
+        async function iniciar() {
+            if (!KEY) {
+                KEY = prompt("Pegá la clave definitiva (...2ARk):");
+                if (!KEY) return;
+            }
 
-        const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!Recognition) return alert("Navegador no soportado.");
+            const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const rec = new Recognition();
+            rec.lang = 'es-AR';
 
-        const rec = new Recognition();
-        rec.lang = 'es-AR';
+            rec.onresult = async (e) => {
+                const txt = e.results[0][0].transcript;
+                document.getElementById('res').innerHTML = "<b>Daniel:</b> " + txt;
 
-        rec.onstart = () => { document.getElementById('st').innerText = "Escuchando..."; };
+                try {
+                    // USAMOS EL MODELO PRO QUE ES MÁS ESTABLE PARA CUENTAS NUEVAS
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${KEY}`;
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: "Sos el socio abogado sarcástico de Daniel Mizrahi. Sé breve. Respondé a: " + txt }] }]
+                        })
+                    });
 
-        rec.onresult = async (e) => {
-            const mensajeUsuario = e.results[0][0].transcript;
-            document.getElementById('res').innerHTML = "<b>Daniel:</b> " + mensajeUsuario;
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error.message);
 
-            try {
-                // RUTA BLINDADA: v1beta con modelo -latest
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
-                
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: "Sos el socio abogado sarcástico de Daniel Mizrahi. Sé breve. Respondé a: " + mensajeUsuario }] }]
-                    })
-                });
+                    const aiText = data.candidates[0].content.parts[0].text;
+                    document.getElementById('res').innerHTML = "<b>Socio:</b> " + aiText;
 
-                const data = await response.json();
-
-                if (data.error) throw new Error(data.error.message);
-
-                if (data.candidates && data.candidates[0].content) {
-                    const respuestaIA = data.candidates[0].content.parts[0].text;
-                    document.getElementById('res').innerHTML = "<b>Socio:</b> " + respuestaIA;
-                    document.getElementById('st').innerText = "Listo";
-
-                    const u = new SpeechSynthesisUtterance(respuestaIA);
+                    const u = new SpeechSynthesisUtterance(aiText);
                     u.lang = 'es-AR';
                     window.speechSynthesis.speak(u);
+
+                } catch (err) {
+                    document.getElementById('res').innerHTML = "<b style='color:red;'>Error:</b> " + err.message;
                 }
-            } catch (err) {
-                document.getElementById('res').innerHTML = "<b style='color:#f85149;'>Error de Google:</b> " + err.message;
-            }
-        };
-        rec.start();
-    }
-</script>
+            };
+            rec.start();
+        }
+    </script>
+</body>
+</html>
