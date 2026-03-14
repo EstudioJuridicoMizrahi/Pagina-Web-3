@@ -2,71 +2,93 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Socio Digital Mizrahi</title>
     <style>
-        body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding-top: 50px; }
-        .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; display: inline-block; max-width: 450px; }
-        #btn { background: #238636; border: none; color: white; padding: 15px 32px; font-size: 16px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; }
-        #res { margin-top: 20px; color: #58a6ff; text-align: left; font-size: 0.9em; line-height: 1.4; }
-        .error-box { color: #f85149; background: rgba(248, 81, 73, 0.1); padding: 10px; border-radius: 5px; margin-top: 10px; border: 1px solid #f85149; }
+        body { background: #0d1117; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding-top: 50px; margin: 0; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 40px; display: inline-block; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { color: #58a6ff; margin-bottom: 10px; }
+        #btn { background: #238636; border: none; color: white; padding: 20px 40px; font-size: 18px; border-radius: 50px; cursor: pointer; transition: 0.3s; font-weight: bold; }
+        #btn:hover { background: #2ea043; transform: scale(1.05); }
+        #btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; }
+        #res { margin-top: 30px; text-align: left; background: #0d1117; padding: 20px; border-radius: 10px; border-left: 5px solid #58a6ff; min-height: 80px; font-size: 1.1em; line-height: 1.5; }
+        .status { font-size: 0.8em; color: #8b949e; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="card">
         <h1>Socio Digital Mizrahi</h1>
-        <button id="btn" onclick="escuchar()">🎤 EMPEZAR A HABLAR</button>
-        <div id="res">Esperando...</div>
+        <p class="status" id="st">Listo para la audiencia</p>
+        <button id="btn" onclick="iniciar()">🎤 EMPEZAR A HABLAR</button>
+        <div id="res">Esperando tu consulta...</div>
     </div>
 
     <script>
-        let KEY = "";
+        let API_KEY = "";
 
-        async function escuchar() {
-            if (!KEY) {
-                KEY = prompt("Pegá tu Clave de API aquí (la que creaste última):");
-                if (!KEY) return;
+        async function iniciar() {
+            // Pedimos la clave solo la primera vez
+            if (!API_KEY) {
+                API_KEY = prompt("Ingresá tu Clave de API (...2ARk):");
+                if (!API_KEY) return;
             }
 
-            const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+            const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!Recognition) return alert("Tu navegador no soporta reconocimiento de voz.");
+
+            const rec = new Recognition();
             rec.lang = 'es-AR';
 
-            rec.onstart = () => { document.getElementById('res').innerText = "Escuchando..."; };
+            rec.onstart = () => { 
+                document.getElementById('st').innerText = "Escuchando..."; 
+                document.getElementById('btn').classList.add('active');
+            };
+
+            rec.onend = () => { 
+                document.getElementById('btn').classList.remove('active');
+            };
 
             rec.onresult = async (e) => {
-                const txt = e.results[0][0].transcript;
-                document.getElementById('res').innerHTML = "<b>Daniel:</b> " + txt + "<br><i>Procesando...</i>";
-                
+                const mensajeUsuario = e.results[0][0].transcript;
+                document.getElementById('res').innerHTML = "<b>Daniel:</b> " + mensajeUsuario + "<br><i>Procesando...</i>";
+                document.getElementById('st').innerText = "Consultando a la Corte...";
+
                 try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
+                    // RUTA DE MÁXIMA COMPATIBILIDAD (v1 en lugar de v1beta)
+                    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
                     
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: "Respondé como un socio abogado sarcástico y breve: " + txt }] }]
+                            contents: [{ parts: [{ text: "Sos el socio abogado sarcástico de Daniel Mizrahi. Sé muy breve. Respondé a: " + mensajeUsuario }] }]
                         })
                     });
-                    
+
                     const data = await response.json();
-                    
-                    // Manejo de errores de Google
+
                     if (data.error) {
-                        document.getElementById('res').innerHTML = `<div class="error-box"><b>Error de Google:</b> ${data.error.message}</div>`;
-                        return;
+                        throw new Error(data.error.message);
                     }
 
                     if (data.candidates && data.candidates[0].content) {
-                        const aiText = data.candidates[0].content.parts[0].text;
-                        document.getElementById('res').innerHTML = "<b>Socio:</b> " + aiText;
-                        
-                        const u = new SpeechSynthesisUtterance(aiText);
+                        const respuestaIA = data.candidates[0].content.parts[0].text;
+                        document.getElementById('res').innerHTML = "<b>Socio:</b> " + respuestaIA;
+                        document.getElementById('st').innerText = "Listo";
+
+                        // Voz del socio
+                        const sintesis = window.speechSynthesis;
+                        const u = new SpeechSynthesisUtterance(respuestaIA);
                         u.lang = 'es-AR';
-                        window.speechSynthesis.speak(u);
+                        sintesis.speak(u);
+                    } else {
+                        throw new Error("Respuesta inesperada de Google.");
                     }
 
                 } catch (err) {
-                    document.getElementById('res').innerHTML = `<div class="error-box"><b>Fallo técnico:</b> ${err.message}</div>`;
+                    document.getElementById('res').innerHTML = "<b style='color:#f85149;'>Fallo en el alegato:</b> " + err.message;
+                    document.getElementById('st').innerText = "Error";
                 }
             };
 
