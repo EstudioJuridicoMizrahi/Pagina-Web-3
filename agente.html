@@ -12,7 +12,6 @@
     </style>
 </head>
 <body>
-
     <div class="card">
         <h1>Socio Digital Mizrahi</h1>
         <p id="st">Presioná para hablar</p>
@@ -21,8 +20,8 @@
     </div>
 
     <script>
-        // PEGA ACÁ LA CLAVE QUE COPIASTE RECIÉN
-        const KEY = "AIzaSyASpIOk3ClScssQPCmghMGdVYvPUhkMqeQ"; 
+        // PEGA ACÁ TU CLAVE NUEVA DEL PROYECTO "GEMINI PROJECT"
+        const KEY = "AIzaSyC_3NUW1wDijFIxrtB7d1_1NsMTsJNhDpU"; 
 
         const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         rec.lang = 'es-AR';
@@ -35,13 +34,13 @@
             document.getElementById('res').innerHTML = "<b>Daniel:</b> " + txt;
             
             try {
-                // Usamos la ruta oficial v1 (Estable)
-                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${KEY}`;
+                // CAMBIO CLAVE: Usamos v1beta para máxima compatibilidad inicial
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
                 
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Sos el socio del abogado Daniel Mizrahi. Sé breve y sarcástico. Respondé a: " + txt }] }] })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Respondé como un socio abogado sarcástico y breve: " + txt }] }] })
                 });
                 
                 const data = await response.json();
@@ -55,7 +54,7 @@
                 window.speechSynthesis.speak(u);
                 document.getElementById('st').innerText = "Listo";
             } catch (err) {
-                document.getElementById('res').innerHTML = "<b>Error:</b> " + err.message;
+                document.getElementById('res').innerHTML = "<b>Aviso:</b> El modelo se está despertando. Esperá 1 minuto y probá de nuevo. <br><small>" + err.message + "</small>";
             }
         };
 
