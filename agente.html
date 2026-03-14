@@ -7,8 +7,8 @@
     <style>
         body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
         .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        #btn { background: #238636; border: none; border-radius: 50%; width: 90px; height: 90px; cursor: pointer; margin: 20px; font-size: 40px; outline: none; }
-        #btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; }
+        #btn { background: #238636; border: none; border-radius: 50%; width: 90px; height: 90px; cursor: pointer; margin: 20px; font-size: 40px; outline: none; transition: 0.3s; }
+        #btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; transform: scale(1.1); }
         #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 80px; font-size: 0.95rem; }
     </style>
 </head>
@@ -17,7 +17,7 @@
         <h1>Socio Digital Mizrahi</h1>
         <p id="st">Hacé clic para hablar</p>
         <button id="btn" onclick="escuchar()">🎤</button>
-        <div id="res">Esperando...</div>
+        <div id="res">Esperando tu consulta, Daniel...</div>
     </div>
 
     <script>
@@ -34,15 +34,15 @@
         rec.lang = 'es-AR';
 
         rec.onstart = () => { document.getElementById('st').innerText = "Escuchando..."; document.getElementById('btn').classList.add('active'); };
-        rec.onend = () => { document.getElementById('btn').classList.remove('active'); document.getElementById('st').innerText = "Procesando..."; };
+        rec.onend = () => { document.getElementById('btn').classList.remove('active'); document.getElementById('st').innerText = "Consultando..."; };
 
         rec.onresult = async (e) => {
             const txt = e.results[0][0].transcript;
             document.getElementById('res').innerHTML = "<b>Vos:</b> " + txt;
             
             try {
-                // CAMBIO CLAVE: Usamos el nombre de modelo 'gemini-pro' que es el más estable de todos
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
+                // CAMBIO CLAVE: Usamos v1 (Estable) y el modelo flash sin sufijos
+                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
                 
                 const response = await fetch(url, {
                     method: 'POST',
