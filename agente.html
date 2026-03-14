@@ -20,7 +20,7 @@
     </div>
 
     <script>
-        // USA LA ÚLTIMA CLAVE QUE GENERASTE EN EL PROYECTO "GEMINI PROJECT"
+        // USA LA CLAVE QUE GENERASTE EN EL PROYECTO "GEMINI PROJECT"
         const KEY = "AIzaSyD28DrHH8COCGjNzmv0dPNwqYBaandYArY"; 
 
         const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
@@ -29,45 +29,42 @@
         rec.onstart = () => { document.getElementById('st').innerText = "Escuchando..."; document.getElementById('btn').classList.add('active'); };
         rec.onend = () => { document.getElementById('btn').classList.remove('active'); };
 
-        async function llamarAPI(mensaje, modelo) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${KEY}`;
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: "Sos el socio abogado sarcástico de Daniel Mizrahi. Sé breve. Respondé a: " + mensaje }] }] })
-            });
-            return response;
-        }
-
         rec.onresult = async (e) => {
             const txt = e.results[0][0].transcript;
             document.getElementById('res').innerHTML = "<b>Daniel:</b> " + txt;
             document.getElementById('st').innerText = "Consultando...";
             
-            // Lista de modelos para probar en orden de estabilidad
-            const modelos = ["gemini-pro", "gemini-1.0-pro", "gemini-1.5-flash"];
-            let exito = false;
+            try {
+                // CAMBIO CLAVE: Usamos /v1/ y gemini-1.5-flash-latest que es el más compatible
+                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${KEY}`;
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Sos el socio abogado sarcástico de Daniel Mizrahi. Sé muy breve. Respondé a: " + txt }] }] })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
 
-            for (let m of modelos) {
-                try {
-                    const response = await llamarAPI(txt, m);
-                    const data = await response.json();
+                if (data.candidates && data.candidates[0].content) {
+                    const aiText = data.candidates[0].content.parts[0].text;
+                    document.getElementById('res').innerHTML = "<b>Socio:</b> " + aiText;
                     
-                    if (data.candidates && data.candidates[0].content) {
-                        const aiText = data.candidates[0].content.parts[0].text;
-                        document.getElementById('res').innerHTML = "<b>Socio:</b> " + aiText;
-                        const u = new SpeechSynthesisUtterance(aiText);
-                        u.lang = 'es-AR';
-                        window.speechSynthesis.speak(u);
-                        document.getElementById('st').innerText = "Listo";
-                        exito = true;
-                        break;
-                    }
-                } catch (err) { console.error("Fallo con " + m); }
-            }
+                    const u = new SpeechSynthesisUtterance(aiText);
+                    u.lang = 'es-AR';
+                    window.speechSynthesis.speak(u);
+                    document.getElementById('st').innerText = "Listo";
+                } else {
+                    throw new Error("Respuesta vacía de Google");
+                }
 
-            if (!exito) {
-                document.getElementById('res').innerHTML = "<b>Estado:</b> Google sigue procesando el alta de tu API. Esperá 5 minutos y refrescá con Ctrl+F5.";
+            } catch (err) {
+                document.getElementById('res').innerHTML = "<b>Error de Conexión:</b> " + err.message + "<br><br>Revisá que la clave sea la del proyecto donde habilitaste la API.";
+                document.getElementById('st').innerText = "Fallo";
             }
         };
 
