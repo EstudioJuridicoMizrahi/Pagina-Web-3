@@ -7,29 +7,27 @@
     <style>
         body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
         .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h1 { color: #58a6ff; font-size: 1.5rem; }
-        #btn { background: #238636; border: none; border-radius: 50%; width: 85px; height: 85px; cursor: pointer; margin: 20px; outline: none; transition: 0.3s; }
+        h1 { color: #58a6ff; font-size: 1.5rem; margin-bottom: 5px; }
+        #btn { background: #238636; border: none; border-radius: 50%; width: 85px; height: 85px; cursor: pointer; margin: 20px; outline: none; transition: 0.3s; font-size: 35px; }
         #btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; }
-        #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 60px; font-size: 0.95rem; }
+        #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 60px; font-size: 0.95rem; line-height: 1.5; }
+        .st { color: #8b949e; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
     <div class="card">
         <h1>Socio Digital Mizrahi</h1>
-        <p id="st">Hacé clic para hablar</p>
+        <p class="st" id="st">Hacé clic para hablar con tu socio</p>
         <button id="btn" onclick="escuchar()">🎤</button>
-        <div id="res">Esperando...</div>
+        <div id="res">Esperando consulta...</div>
     </div>
 
     <script>
+        // Clave del proyecto Landing (...ZlyY)
         const p1 = "AIzaSy"; 
-        const p2 = "DteAu1wTmuPZkVmD6BQljL-4lF6058XpM";
+        const p2 = "A_yYqQ3L-P8X0M6-4p8-ZlyY"; // <--- VERIFICÁ QUE ESTA SEA LA CLAVE COMPLETA
         const KEY = p1 + p2;
-
-        const resDiv = document.getElementById('res');
-        const st = document.getElementById('st');
-        const btn = document.getElementById('btn');
 
         function hablar(t) {
             window.speechSynthesis.cancel();
@@ -38,49 +36,40 @@
             window.speechSynthesis.speak(u);
         }
 
-        const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+        const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+        const rec = new SpeechRecognition();
         rec.lang = 'es-AR';
 
-        rec.onstart = () => { st.innerText = "Escuchando..."; btn.classList.add('active'); };
-        rec.onend = () => { btn.classList.remove('active'); st.innerText = "Procesando..."; };
+        rec.onstart = () => { 
+            document.getElementById('st').innerText = "Te escucho, Daniel..."; 
+            document.getElementById('btn').classList.add('active'); 
+        };
+        rec.onend = () => { 
+            document.getElementById('btn').classList.remove('active'); 
+            document.getElementById('st').innerText = "Consultando..."; 
+        };
 
         rec.onresult = async (e) => {
             const txt = e.results[0][0].transcript;
-            resDiv.innerHTML = "<b>Daniel:</b> " + txt;
+            document.getElementById('res').innerHTML = "<b>Vos:</b> " + txt;
             
             try {
-                // USAMOS v1 (ESTABLE) Y EL MODELO BASE SIN VERSIONES BETA
-                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${KEY}`;
-                
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: "Sos el socio del abogado Daniel Mizrahi. Sé muy breve, sarcástico y profesional. Respondé a: " + txt
-                            }]
-                        }]
-                    })
+                    body: JSON.stringify({contents: [{parts: [{text: "Sos el socio del abogado Daniel Mizrahi. Respondé de forma muy breve, sarcástica y profesional. Consulta: " + txt}]}]})
                 });
                 
                 const data = await response.json();
+                if (data.error) throw new Error(data.error.message);
 
-                if (data.error) {
-                    resDiv.innerText = "Error de Google: " + data.error.message;
-                    return;
-                }
-
-                if (data.candidates && data.candidates[0].content) {
-                    const aiText = data.candidates[0].content.parts[0].text;
-                    resDiv.innerHTML = "<b>Socio:</b> " + aiText;
-                    hablar(aiText);
-                    st.innerText = "Listo";
-                } else {
-                    resDiv.innerText = "Google no dio respuesta. Probablemente bloqueó la clave.";
-                }
+                const aiText = data.candidates[0].content.parts[0].text;
+                document.getElementById('res').innerHTML = "<b>Socio:</b> " + aiText;
+                hablar(aiText);
+                document.getElementById('st').innerText = "Listo";
             } catch (err) {
-                resDiv.innerText = "Error de conexión.";
+                document.getElementById('res').innerText = "Error: " + err.message;
             }
         };
 
