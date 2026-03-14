@@ -6,12 +6,13 @@
     <style>
         body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
         .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; max-width: 400px; width: 90%; }
-        #btn { background: #238636; border: none; border-radius: 50%; width: 90px; height: 90px; cursor: pointer; font-size: 40px; margin: 20px; }
+        #btn { background: #238636; border: none; border-radius: 50%; width: 80px; height: 80px; cursor: pointer; font-size: 35px; margin: 20px; outline: none; }
         #btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; }
-        #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 80px; }
+        #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 60px; }
     </style>
 </head>
 <body>
+
     <div class="card">
         <h1>Socio Digital Mizrahi</h1>
         <p id="st">Presioná para hablar</p>
@@ -20,14 +21,8 @@
     </div>
 
     <script>
-        const KEY = "AIzaSyDIU-optDkovlfsIDpPb3s8PnYnXLNZIyY"; 
-
-        function hablar(t) {
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(t);
-            u.lang = 'es-AR';
-            window.speechSynthesis.speak(u);
-        }
+        // PEGA ACÁ LA CLAVE QUE COPIASTE RECIÉN
+        const KEY = "AIzaSyASpIOk3ClScssQPCmghMGdVYvPUhkMqeQ"; 
 
         const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         rec.lang = 'es-AR';
@@ -40,23 +35,27 @@
             document.getElementById('res').innerHTML = "<b>Daniel:</b> " + txt;
             
             try {
-                // Usamos la URL v1 (estable) con el modelo flash
+                // Usamos la ruta oficial v1 (Estable)
                 const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${KEY}`;
                 
                 const response = await fetch(url, {
                     method: 'POST',
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Respondé como un socio abogado sarcástico y muy breve: " + txt }] }] })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Sos el socio del abogado Daniel Mizrahi. Sé breve y sarcástico. Respondé a: " + txt }] }] })
                 });
                 
-                const d = await response.json();
-                if (d.error) throw new Error(d.error.message);
+                const data = await response.json();
+                if (data.error) throw new Error(data.error.message);
 
-                const ai = d.candidates[0].content.parts[0].text;
-                document.getElementById('res').innerHTML = "<b>Socio:</b> " + ai;
-                hablar(ai);
+                const aiText = data.candidates[0].content.parts[0].text;
+                document.getElementById('res').innerHTML = "<b>Socio:</b> " + aiText;
+                
+                const u = new SpeechSynthesisUtterance(aiText);
+                u.lang = 'es-AR';
+                window.speechSynthesis.speak(u);
                 document.getElementById('st').innerText = "Listo";
             } catch (err) {
-                document.getElementById('res').innerText = "Error de conexión. Intentá en Incógnito o revisá AdBlock.";
+                document.getElementById('res').innerHTML = "<b>Error:</b> " + err.message;
             }
         };
 
