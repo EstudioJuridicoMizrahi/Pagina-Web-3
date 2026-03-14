@@ -5,35 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Socio Digital Mizrahi</title>
     <style>
-        body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
         .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h1 { color: #58a6ff; font-size: 1.5rem; margin-bottom: 5px; }
-        #btn { background: #238636; border: none; border-radius: 50%; width: 85px; height: 85px; cursor: pointer; margin: 20px; outline: none; transition: 0.3s; font-size: 35px; }
-        #btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; }
-        #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 60px; font-size: 0.95rem; line-height: 1.5; }
-        .st { color: #8b949e; font-size: 0.85rem; }
+        h1 { color: #58a6ff; font-size: 1.5rem; margin-bottom: 10px; }
+        #btn { background: #238636; border: none; border-radius: 50%; width: 90px; height: 90px; cursor: pointer; margin: 20px; font-size: 40px; outline: none; transition: 0.3s; }
+        #btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; transform: scale(1.1); }
+        #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 80px; font-size: 0.95rem; line-height: 1.4; }
+        .st { color: #8b949e; font-size: 0.85rem; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
     <div class="card">
         <h1>Socio Digital Mizrahi</h1>
-        <p class="st" id="st">Hacé clic para hablar con tu socio</p>
+        <p class="st" id="st">Hacé clic para hablar con el socio</p>
         <button id="btn" onclick="escuchar()">🎤</button>
-        <div id="res">Esperando consulta...</div>
+        <div id="res">Listo para la audiencia, Daniel.</div>
     </div>
 
     <script>
-        // Clave del proyecto Landing (...ZlyY)
-        const p1 = "AIzaSyDIU-optDkovlfsIDpPb3s8PnYnXLNZIyY"; 
-        const p2 = "A_yYqQ3L-P8X0M6-4p8-ZlyY"; // <--- VERIFICÁ QUE ESTA SEA LA CLAVE COMPLETA
-        const KEY = p1 + p2;
+        // LA CLAVE QUE ME PASASTE
+        const API_KEY = "AIzaSyDIU-optDkovlfsIDpPb3s8PnYnXLNZIyY"; 
 
-        function hablar(t) {
+        const resDiv = document.getElementById('res');
+        const st = document.getElementById('st');
+        const btn = document.getElementById('btn');
+
+        function hablar(texto) {
             window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(t);
-            u.lang = 'es-AR';
-            window.speechSynthesis.speak(u);
+            const mensaje = new SpeechSynthesisUtterance(texto);
+            mensaje.lang = 'es-AR';
+            window.speechSynthesis.speak(mensaje);
         }
 
         const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
@@ -41,35 +43,45 @@
         rec.lang = 'es-AR';
 
         rec.onstart = () => { 
-            document.getElementById('st').innerText = "Te escucho, Daniel..."; 
-            document.getElementById('btn').classList.add('active'); 
+            st.innerText = "Escuchando..."; 
+            btn.classList.add('active'); 
         };
         rec.onend = () => { 
-            document.getElementById('btn').classList.remove('active'); 
-            document.getElementById('st').innerText = "Consultando..."; 
+            btn.classList.remove('active'); 
+            st.innerText = "Procesando..."; 
         };
 
         rec.onresult = async (e) => {
             const txt = e.results[0][0].transcript;
-            document.getElementById('res').innerHTML = "<b>Vos:</b> " + txt;
+            resDiv.innerHTML = "<b>Vos:</b> " + txt;
             
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
+                // Usamos gemini-1.5-flash en la v1beta que es la que te funcionó en el diagnóstico
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+                
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({contents: [{parts: [{text: "Sos el socio del abogado Daniel Mizrahi. Respondé de forma muy breve, sarcástica y profesional. Consulta: " + txt}]}]})
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: "Sos el socio del abogado Daniel Mizrahi. Respondé de forma muy breve, sarcástica y profesional. Consulta: " + txt
+                            }]
+                        }]
+                    })
                 });
                 
                 const data = await response.json();
+                
                 if (data.error) throw new Error(data.error.message);
 
                 const aiText = data.candidates[0].content.parts[0].text;
-                document.getElementById('res').innerHTML = "<b>Socio:</b> " + aiText;
+                resDiv.innerHTML = "<b>Socio:</b> " + aiText;
                 hablar(aiText);
-                document.getElementById('st').innerText = "Listo";
+                st.innerText = "Listo";
             } catch (err) {
-                document.getElementById('res').innerText = "Error: " + err.message;
+                resDiv.innerHTML = "<b>Error:</b> " + err.message;
+                hablar("Hay un error en el expediente, Daniel.");
             }
         };
 
