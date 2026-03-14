@@ -1,62 +1,19 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Socio Mizrahi V2.0</title>
-    <style>
-        body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h1 { color: #58a6ff; font-size: 1.5rem; }
-        #btn { background: #238636; border: none; border-radius: 50%; width: 85px; height: 85px; cursor: pointer; margin: 20px; outline: none; margin: auto; }
-        #btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; }
-        #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 60px; font-size: 0.95rem; }
-    </style>
-</head>
-<body>
-
-    <div class="card">
-        <h1>Socio Digital V2.0</h1>
-        <p id="st">Presioná para hablar</p>
-        <button id="btn" onclick="escuchar()">🎤</button>
-        <div id="res">Esperando...</div>
-    </div>
-
-    <script>
-        const p1 = "AIzaSy"; 
-        const p2 = "DteAu1wTmuPZkVmD6BQljL-4lF6058XpM";
-        const KEY = p1 + p2;
-
-        const resDiv = document.getElementById('res');
-        const st = document.getElementById('st');
-
-        function hablar(t) {
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(t);
-            u.lang = 'es-AR';
-            window.speechSynthesis.speak(u);
-        }
-
-        const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
-        rec.lang = 'es-AR';
-
-        rec.onstart = () => { st.innerText = "Escuchando..."; };
-        rec.onend = () => { st.innerText = "Procesando..."; };
-
-        rec.onresult = async (e) => {
+rec.onresult = async (e) => {
             const txt = e.results[0][0].transcript;
             resDiv.innerHTML = "<b>Vos:</b> " + txt;
             
             try {
-                // AQUÍ ESTÁ EL CAMBIO: v1 y gemini-1.5-flash
-                const url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + KEY;
+                // Usamos v1beta y el modelo flash con el nombre exacto que pide el sistema
+                const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + KEY;
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({contents: [{parts: [{text: "Sos el socio del abogado Daniel Mizrahi. Sé breve y sarcástico. Respondé a: " + txt}]}]})
+                    body: JSON.stringify({contents: [{parts: [{text: "Sos el socio del abogado Daniel Mizrahi. Sé muy breve y sarcástico. Respondé a: " + txt}]}]})
                 });
                 
                 const data = await response.json();
+                
+                // Si hay error, lo mostramos para ver qué dice el "juez" Google
                 if (data.error) throw new Error(data.error.message);
 
                 const aiText = data.candidates[0].content.parts[0].text;
@@ -65,11 +22,6 @@
                 st.innerText = "Listo";
             } catch (err) {
                 resDiv.innerText = "Error: " + err.message;
-                hablar("Error en el sistema.");
+                hablar("Error en el sistema, Daniel.");
             }
         };
-
-        function escuchar() { try { rec.start(); } catch(e) {} }
-    </script>
-</body>
-</html>
