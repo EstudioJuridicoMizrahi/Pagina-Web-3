@@ -8,7 +8,7 @@
         body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
         .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         h1 { color: #58a6ff; font-size: 1.5rem; }
-        #btn { background: #238636; border: none; border-radius: 50%; width: 85px; height: 85px; cursor: pointer; margin: 20px; outline: none; }
+        #btn { background: #238636; border: none; border-radius: 50%; width: 85px; height: 85px; cursor: pointer; margin: 20px; outline: none; transition: 0.3s; }
         #btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; }
         #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 60px; font-size: 0.95rem; }
     </style>
@@ -46,37 +46,42 @@
 
         rec.onresult = async (e) => {
             const txt = e.results[0][0].transcript;
-            resDiv.innerHTML = "<b>Vos:</b> " + txt;
+            resDiv.innerHTML = "<b>Daniel:</b> " + txt;
             
-            // LISTA DE MODELOS POSIBLES (Si falla uno, prueba el siguiente)
-            const modelos = [
-                "gemini-1.5-flash-latest",
-                "gemini-1.5-flash",
-                "gemini-pro"
-            ];
+            try {
+                // USAMOS v1 (ESTABLE) Y EL MODELO BASE SIN VERSIONES BETA
+                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${KEY}`;
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: "Sos el socio del abogado Daniel Mizrahi. Sé muy breve, sarcástico y profesional. Respondé a: " + txt
+                            }]
+                        }]
+                    })
+                });
+                
+                const data = await response.json();
 
-            for (let m of modelos) {
-                try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${KEY}`;
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({contents: [{parts: [{text: "Sos el socio de Daniel Mizrahi. Sé breve y sarcástico. Respondé a: " + txt}]}]})
-                    });
-                    
-                    const data = await response.json();
-                    if (data.candidates && data.candidates[0].content.parts[0].text) {
-                        const aiText = data.candidates[0].content.parts[0].text;
-                        resDiv.innerHTML = "<b>Socio:</b> " + aiText;
-                        hablar(aiText);
-                        st.innerText = "Listo";
-                        return; // Éxito, salimos del bucle
-                    }
-                } catch (err) {
-                    console.log("Fallo con modelo " + m);
+                if (data.error) {
+                    resDiv.innerText = "Error de Google: " + data.error.message;
+                    return;
                 }
+
+                if (data.candidates && data.candidates[0].content) {
+                    const aiText = data.candidates[0].content.parts[0].text;
+                    resDiv.innerHTML = "<b>Socio:</b> " + aiText;
+                    hablar(aiText);
+                    st.innerText = "Listo";
+                } else {
+                    resDiv.innerText = "Google no dio respuesta. Probablemente bloqueó la clave.";
+                }
+            } catch (err) {
+                resDiv.innerText = "Error de conexión.";
             }
-            resDiv.innerText = "Error: Google no reconoce ninguno de sus modelos hoy.";
         };
 
         function escuchar() { try { rec.start(); } catch(e) {} }
