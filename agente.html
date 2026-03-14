@@ -2,40 +2,25 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Socio Digital Mizrahi</title>
     <style>
         body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        #btn { background: #238636; border: none; border-radius: 50%; width: 90px; height: 90px; cursor: pointer; margin: 20px; font-size: 40px; outline: none; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; max-width: 400px; width: 90%; }
+        #btn { background: #238636; border: none; border-radius: 50%; width: 90px; height: 90px; cursor: pointer; font-size: 40px; margin: 20px; }
         #btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; }
-        #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 80px; font-size: 0.95rem; }
+        #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 80px; }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>Socio Digital Mizrahi</h1>
-        <p id="st">Hacé clic para hablar</p>
+        <p id="st">Presioná para hablar</p>
         <button id="btn" onclick="escuchar()">🎤</button>
-        <div id="res">Iniciando sistema legal...</div>
+        <div id="res">Esperando...</div>
     </div>
 
-    <script type="importmap">
-      {
-        "imports": {
-          "@google/generative-ai": "https://esm.run/@google/generative-ai"
-        }
-      }
-    </script>
-
-    <script type="module">
-        import { GoogleGenerativeAI } from "@google/generative-ai";
-
-        // TU CLAVE DE LA CAPTURA 303
-        const API_KEY = "AIzaSyDIU-optDkovlfsIDpPb3s8PnYnXLNZIyY";
-        const genAI = new GoogleGenerativeAI(API_KEY);
-        // Forzamos el modelo flash-8b que es el más compatible del mundo
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-8b" });
+    <script>
+        const API_KEY = "AIzaSyDIU-optDkovlfsIDpPb3s8PnYnXLNZIyY"; 
 
         function hablar(t) {
             window.speechSynthesis.cancel();
@@ -44,34 +29,41 @@
             window.speechSynthesis.speak(u);
         }
 
-        const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+        const rec = new (window.webkitSpeechRecognition || window.Recognition)();
         rec.lang = 'es-AR';
 
-        window.escuchar = () => { try { rec.start(); } catch(e) {} };
-
         rec.onstart = () => { document.getElementById('st').innerText = "Escuchando..."; document.getElementById('btn').classList.add('active'); };
-        rec.onend = () => { document.getElementById('btn').classList.remove('active'); document.getElementById('st').innerText = "Procesando..."; };
+        rec.onend = () => { document.getElementById('btn').classList.remove('active'); };
 
         rec.onresult = async (e) => {
             const txt = e.results[0][0].transcript;
-            document.getElementById('res').innerHTML = "<b>Daniel:</b> " + txt;
+            document.getElementById('res').innerHTML = "<b>Vos:</b> " + txt;
             
             try {
-                const prompt = "Sos el socio del abogado Daniel Mizrahi. Sé muy breve, sarcástico y profesional. Respondé a: " + txt;
-                const result = await model.generateContent(prompt);
-                const response = await result.response;
-                const aiText = response.text();
+                // USAMOS LA RUTA MÁS COMPATIBLE EXISTENTE (v1beta1)
+                const url = `https://generativelanguage.googleapis.com/v1beta1/models/gemini-pro:generateContent?key=${API_KEY}`;
                 
-                document.getElementById('res').innerHTML = "<b>Socio:</b> " + aiText;
-                hablar(aiText);
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: "Sos el socio sarcástico de Daniel Mizrahi. Sé breve. Respondé a: " + txt }] }]
+                    })
+                });
+                
+                const d = await response.json();
+                if (d.error) throw new Error(d.error.message);
+
+                const ai = d.candidates[0].content.parts[0].text;
+                document.getElementById('res').innerHTML = "<b>Socio:</b> " + ai;
+                hablar(ai);
                 document.getElementById('st').innerText = "Listo";
             } catch (err) {
                 document.getElementById('res').innerText = "Error: " + err.message;
-                console.error(err);
             }
         };
 
-        document.getElementById('res').innerText = "Sistema listo. Adelante, Daniel.";
+        function escuchar() { try { rec.start(); } catch(e) {} }
     </script>
 </body>
 </html>
