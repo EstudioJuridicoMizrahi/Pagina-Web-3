@@ -14,44 +14,60 @@
 <body>
     <div class="card">
         <h1>Socio Digital Mizrahi</h1>
-        <p id="st">Presioná el mic y hablá</p>
+        <p id="st">Presioná y hablá</p>
         <button id="btn" onclick="escuchar()">🎤</button>
-        <div id="res">Esperando tu consulta...</div>
+        <div id="res">Esperando...</div>
     </div>
 
     <script>
+        // USA LA ÚLTIMA CLAVE QUE GENERASTE EN EL PROYECTO "GEMINI PROJECT"
         const KEY = "AIzaSyD28DrHH8COCGjNzmv0dPNwqYBaandYArY"; 
 
         const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         rec.lang = 'es-AR';
 
-        rec.onstart = () => { document.getElementById('btn').classList.add('active'); document.getElementById('st').innerText = "Te escucho..."; };
-        rec.onend = () => { document.getElementById('btn').classList.remove('active'); document.getElementById('st').innerText = "Procesando..."; };
+        rec.onstart = () => { document.getElementById('st').innerText = "Escuchando..."; document.getElementById('btn').classList.add('active'); };
+        rec.onend = () => { document.getElementById('btn').classList.remove('active'); };
+
+        async function llamarAPI(mensaje, modelo) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${KEY}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: "Sos el socio abogado sarcástico de Daniel Mizrahi. Sé breve. Respondé a: " + mensaje }] }] })
+            });
+            return response;
+        }
 
         rec.onresult = async (e) => {
             const txt = e.results[0][0].transcript;
-            document.getElementById('res').innerHTML = "<b>Vos:</b> " + txt;
+            document.getElementById('res').innerHTML = "<b>Daniel:</b> " + txt;
+            document.getElementById('st').innerText = "Consultando...";
             
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Respondé como un abogado socio de Daniel Mizrahi, muy sarcástico y breve: " + txt }] }] })
-                });
-                
-                const data = await response.json();
-                if (data.error) throw new Error(data.error.message);
+            // Lista de modelos para probar en orden de estabilidad
+            const modelos = ["gemini-pro", "gemini-1.0-pro", "gemini-1.5-flash"];
+            let exito = false;
 
-                const aiText = data.candidates[0].content.parts[0].text;
-                document.getElementById('res').innerHTML = "<b>Socio:</b> " + aiText;
-                
-                const u = new SpeechSynthesisUtterance(aiText);
-                u.lang = 'es-AR';
-                window.speechSynthesis.speak(u);
-                document.getElementById('st').innerText = "Listo";
-            } catch (err) {
-                document.getElementById('res').innerHTML = "<b>Aviso:</b> Google está terminando de activar el permiso. Esperá 1 min. <br><small>" + err.message + "</small>";
+            for (let m of modelos) {
+                try {
+                    const response = await llamarAPI(txt, m);
+                    const data = await response.json();
+                    
+                    if (data.candidates && data.candidates[0].content) {
+                        const aiText = data.candidates[0].content.parts[0].text;
+                        document.getElementById('res').innerHTML = "<b>Socio:</b> " + aiText;
+                        const u = new SpeechSynthesisUtterance(aiText);
+                        u.lang = 'es-AR';
+                        window.speechSynthesis.speak(u);
+                        document.getElementById('st').innerText = "Listo";
+                        exito = true;
+                        break;
+                    }
+                } catch (err) { console.error("Fallo con " + m); }
+            }
+
+            if (!exito) {
+                document.getElementById('res').innerHTML = "<b>Estado:</b> Google sigue procesando el alta de tu API. Esperá 5 minutos y refrescá con Ctrl+F5.";
             }
         };
 
