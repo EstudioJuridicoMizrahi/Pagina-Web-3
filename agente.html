@@ -5,9 +5,10 @@
     <title>Socio Digital Mizrahi</title>
     <style>
         body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding-top: 50px; }
-        .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; display: inline-block; }
-        #btn { background: #238636; border: none; color: white; padding: 15px 32px; font-size: 16px; border-radius: 8px; cursor: pointer; }
-        #res { margin-top: 20px; color: #58a6ff; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; display: inline-block; max-width: 450px; }
+        #btn { background: #238636; border: none; color: white; padding: 15px 32px; font-size: 16px; border-radius: 8px; cursor: pointer; margin-bottom: 20px; }
+        #res { margin-top: 20px; color: #58a6ff; text-align: left; font-size: 0.9em; line-height: 1.4; }
+        .error-box { color: #f85149; background: rgba(248, 81, 73, 0.1); padding: 10px; border-radius: 5px; margin-top: 10px; border: 1px solid #f85149; }
     </style>
 </head>
 <body>
@@ -19,12 +20,11 @@
     </div>
 
     <script>
-        // La clave se pide por pantalla para que Google no la bloquee en GitHub
         let KEY = "";
 
         async function escuchar() {
             if (!KEY) {
-                KEY = prompt("Pegá tu nueva clave de API aquí:");
+                KEY = prompt("Pegá tu Clave de API aquí (la que creaste última):");
                 if (!KEY) return;
             }
 
@@ -35,7 +35,7 @@
 
             rec.onresult = async (e) => {
                 const txt = e.results[0][0].transcript;
-                document.getElementById('res').innerText = "Daniel dijo: " + txt;
+                document.getElementById('res').innerHTML = "<b>Daniel:</b> " + txt + "<br><i>Procesando...</i>";
                 
                 try {
                     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
@@ -49,16 +49,24 @@
                     });
                     
                     const data = await response.json();
-                    const aiText = data.candidates[0].content.parts[0].text;
                     
-                    document.getElementById('res').innerText = "Socio: " + aiText;
-                    
-                    const u = new SpeechSynthesisUtterance(aiText);
-                    u.lang = 'es-AR';
-                    window.speechSynthesis.speak(u);
+                    // Manejo de errores de Google
+                    if (data.error) {
+                        document.getElementById('res').innerHTML = `<div class="error-box"><b>Error de Google:</b> ${data.error.message}</div>`;
+                        return;
+                    }
+
+                    if (data.candidates && data.candidates[0].content) {
+                        const aiText = data.candidates[0].content.parts[0].text;
+                        document.getElementById('res').innerHTML = "<b>Socio:</b> " + aiText;
+                        
+                        const u = new SpeechSynthesisUtterance(aiText);
+                        u.lang = 'es-AR';
+                        window.speechSynthesis.speak(u);
+                    }
 
                 } catch (err) {
-                    document.getElementById('res').innerText = "Error: " + err.message;
+                    document.getElementById('res').innerHTML = `<div class="error-box"><b>Fallo técnico:</b> ${err.message}</div>`;
                 }
             };
 
