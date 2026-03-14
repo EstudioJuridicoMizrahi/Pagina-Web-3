@@ -5,83 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Socio Digital Mizrahi</title>
     <style>
-        body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; text-align: center; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
         .card { background: #161b22; border: 1px solid #30363d; border-radius: 15px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h1 { color: #58a6ff; font-size: 1.5rem; margin-bottom: 10px; }
-        #btn { background: #238636; border: none; border-radius: 50%; width: 90px; height: 90px; cursor: pointer; margin: 20px; font-size: 40px; outline: none; transition: 0.3s; }
-        #btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; transform: scale(1.1); }
-        #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 80px; font-size: 0.95rem; line-height: 1.4; }
-        .st { color: #8b949e; font-size: 0.85rem; margin-bottom: 20px; }
+        #btn { background: #238636; border: none; border-radius: 50%; width: 90px; height: 90px; cursor: pointer; margin: 20px; font-size: 40px; outline: none; }
+        #btn.active { background: #da3633; box-shadow: 0 0 20px #da3633; }
+        #res { margin-top: 20px; text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; border-left: 4px solid #58a6ff; min-height: 80px; font-size: 0.95rem; }
     </style>
 </head>
 <body>
-
     <div class="card">
         <h1>Socio Digital Mizrahi</h1>
-        <p class="st" id="st">Hacé clic para hablar con el socio</p>
+        <p id="st">Hacé clic para hablar</p>
         <button id="btn" onclick="escuchar()">🎤</button>
-        <div id="res">Listo para la audiencia, Daniel.</div>
+        <div id="res">Esperando...</div>
     </div>
 
     <script>
-        // LA CLAVE QUE ME PASASTE
         const API_KEY = "AIzaSyDIU-optDkovlfsIDpPb3s8PnYnXLNZIyY"; 
 
-        const resDiv = document.getElementById('res');
-        const st = document.getElementById('st');
-        const btn = document.getElementById('btn');
-
-        function hablar(texto) {
+        function hablar(t) {
             window.speechSynthesis.cancel();
-            const mensaje = new SpeechSynthesisUtterance(texto);
-            mensaje.lang = 'es-AR';
-            window.speechSynthesis.speak(mensaje);
+            const u = new SpeechSynthesisUtterance(t);
+            u.lang = 'es-AR';
+            window.speechSynthesis.speak(u);
         }
 
-        const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
-        const rec = new SpeechRecognition();
+        const rec = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         rec.lang = 'es-AR';
 
-        rec.onstart = () => { 
-            st.innerText = "Escuchando..."; 
-            btn.classList.add('active'); 
-        };
-        rec.onend = () => { 
-            btn.classList.remove('active'); 
-            st.innerText = "Procesando..."; 
-        };
+        rec.onstart = () => { document.getElementById('st').innerText = "Escuchando..."; document.getElementById('btn').classList.add('active'); };
+        rec.onend = () => { document.getElementById('btn').classList.remove('active'); document.getElementById('st').innerText = "Procesando..."; };
 
         rec.onresult = async (e) => {
             const txt = e.results[0][0].transcript;
-            resDiv.innerHTML = "<b>Vos:</b> " + txt;
+            document.getElementById('res').innerHTML = "<b>Vos:</b> " + txt;
             
             try {
-                // Usamos gemini-1.5-flash en la v1beta que es la que te funcionó en el diagnóstico
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+                // CAMBIO CLAVE: Usamos el nombre de modelo 'gemini-pro' que es el más estable de todos
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
                 
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: "Sos el socio del abogado Daniel Mizrahi. Respondé de forma muy breve, sarcástica y profesional. Consulta: " + txt
-                            }]
-                        }]
+                        contents: [{ parts: [{ text: "Sos el socio del abogado Daniel Mizrahi. Sé breve, sarcástico y profesional. Respondé a: " + txt }] }]
                     })
                 });
                 
                 const data = await response.json();
-                
                 if (data.error) throw new Error(data.error.message);
 
                 const aiText = data.candidates[0].content.parts[0].text;
-                resDiv.innerHTML = "<b>Socio:</b> " + aiText;
+                document.getElementById('res').innerHTML = "<b>Socio:</b> " + aiText;
                 hablar(aiText);
-                st.innerText = "Listo";
+                document.getElementById('st').innerText = "Listo";
             } catch (err) {
-                resDiv.innerHTML = "<b>Error:</b> " + err.message;
-                hablar("Hay un error en el expediente, Daniel.");
+                document.getElementById('res').innerText = "Error: " + err.message;
             }
         };
 
