@@ -7,6 +7,7 @@
         body { background: #0d1117; color: white; font-family: sans-serif; text-align: center; padding-top: 50px; }
         .card { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 40px; display: inline-block; max-width: 450px; }
         #btn { background: #238636; border: none; color: white; padding: 15px 32px; font-size: 18px; border-radius: 50px; cursor: pointer; }
+        #btn:hover { background: #2ea043; }
         #res { margin-top: 20px; text-align: left; padding: 15px; background: #0d1117; border-radius: 10px; border-left: 5px solid #58a6ff; }
     </style>
 </head>
@@ -26,6 +27,11 @@
             }
 
             const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!Recognition) {
+                alert("Tu navegador no soporta reconocimiento de voz. Intentá con Chrome.");
+                return;
+            }
+
             const rec = new Recognition();
             rec.lang = 'es-AR';
 
@@ -34,31 +40,49 @@
                 document.getElementById('res').innerHTML = "<b>Daniel:</b> " + txt;
 
                 try {
-                    // USAMOS EL MODELO PRO QUE ES MÁS ESTABLE PARA CUENTAS NUEVAS
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${KEY}`;
+                    // CAMBIO CLAVE: Se actualizó el modelo a gemini-1.5-flash
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${KEY}`;
                     
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: "Sos el socio abogado sarcástico de Daniel Mizrahi. Sé breve. Respondé a: " + txt }] }]
+                            contents: [{ 
+                                parts: [{ 
+                                    text: "Sos el socio abogado sarcástico de Daniel Mizrahi. Sé breve. Respondé a: " + txt 
+                                }] 
+                            }]
                         })
                     });
 
                     const data = await response.json();
-                    if (data.error) throw new Error(data.error.message);
+                    
+                    if (data.error) {
+                        throw new Error(data.error.message);
+                    }
+
+                    if (!data.candidates || !data.candidates[0].content) {
+                        throw new Error("La API no devolvió una respuesta válida.");
+                    }
 
                     const aiText = data.candidates[0].content.parts[0].text;
                     document.getElementById('res').innerHTML = "<b>Socio:</b> " + aiText;
 
+                    // Respuesta por voz
                     const u = new SpeechSynthesisUtterance(aiText);
                     u.lang = 'es-AR';
                     window.speechSynthesis.speak(u);
 
                 } catch (err) {
                     document.getElementById('res').innerHTML = "<b style='color:red;'>Error:</b> " + err.message;
+                    console.error(err);
                 }
             };
+
+            rec.onerror = (err) => {
+                document.getElementById('res').innerHTML = "<b style='color:red;'>Error de micro:</b> " + err.error;
+            };
+
             rec.start();
         }
     </script>
